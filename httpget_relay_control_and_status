@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RELAY CONTROL and STATUS</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+        }
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .port-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .port-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .port-title h2 {
+            margin: 0;
+            color: #3498db;
+        }
+        .decimal-value {
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .relays {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .relay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin: 0 10px;
+        }
+        .relay-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2ecc71;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #e74c3c;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider-text {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            width: 100%;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 1;
+        }
+        .connection-status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .last-update {
+            text-align: right;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .ip-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .ip-input {
+            padding: 8px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .btn {
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .current-ip {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Relay Control and Status</h1>
+            <p>Default IP 169.254.1.2:3000/s</p>
+
+            <div class="ip-controls">
+                <a href="https://5.133.102.50/speech-to-relay-control.html" target="_blank">
+                    <button class="btn btn-primary">Main Page</button>
+                </a>
+                
+                <input type="text" id="ipInput" class="ip-input" placeholder="IP:Port/s (sample: 169.254.1.2:3000/s)">
+                <button id="changeIpBtn" class="btn btn-success">IP Change</button>
+                <button id="defaultIpBtn" class="btn btn-secondary">Default IP</button>
+            </div>
+            <div class="current-ip" id="currentIp"></div>
+        </header>
+        
+        <div class="status-container">
+            <div class="port-panel">
+                <div class="port-title">
+                    <h2>RELAY 1-8 (Port B)</h2>
+                    <span class="decimal-value" id="portB-decimal">-</span>
+                </div>
+                <div class="relays" id="portB-relays">
+                    <!-- Röle göstergeleri JavaScript ile eklenecek -->
+                </div>
+            </div>
+            
+            <div class="port-panel">
+                <div class="port-title">
+                    <h2>RELAY 9-16 (Port D)</h2>
+                    <span class="decimal-value" id="portD-decimal">-</span>
+                </div>
+                <div class="relays" id="portD-relays">
+                    <!-- Röle göstergeleri JavaScript ile eklenecek -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="buttons-container">
+            <button id="refreshBtn" class="btn btn-primary">Yenile</button>
+        </div>
+        
+        <div id="connection-status" class="connection-status loading">
+            Veri yükleniyor...
+        </div>
+        
+        <div class="last-update" id="last-update"></div>
+    </div>
+
+    <script>
+        // Varsayılan IP adresi
+        const DEFAULT_IP = "169.254.1.2:3000/s";
+        
+        // ON ve OFF komutları için değerler
+        const ON_COMMANDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'L'];
+        const OFF_COMMANDS = ['i', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 't', 'u', 'v', 'w', 'M'];
+        
+        // Röle isimlerini tanımla - İstenilen isimleri buraya girin
+        const RELAY_NAMES = [
+            "RELAY-1",       // Röle1 (Port B, bit 0)
+            "RELAY-2",       // Röle2 (Port B, bit 1)
+            "RELAY-3",    // Röle3 (Port B, bit 2)
+            "RELAY-4",    // Röle4 (Port B, bit 3)
+            "RELAY-5",      // Röle5 (Port B, bit 4)
+            "RELAY-6",      // Röle6 (Port B, bit 5)
+            "RELAY-7",      // Röle7 (Port B, bit 6)
+            "RELAY-8",      // Röle8 (Port B, bit 7)
+            "RELAY-9",       // Röle9 (Port D, bit 0)
+            "RELAY-10",       // Röle10 (Port D, bit 1)
+            "RELAY-11",    // Röle11 (Port D, bit 2)
+            "RELAY-12",    // Röle12 (Port D, bit 3)
+            "RELAY-13",      // Röle13 (Port D, bit 4)
+            "RELAY-14",      // Röle14 (Port D, bit 5)
+            "RELAY-15",      // Röle15 (Port D, bit 6)
+            "RELAY-16"       // Röle16 (Port D, bit 7)
+        ];
+        
+        // DOM elemanlarını hazırla
+        function createRelayIndicators() {
+            const portBRelays = document.getElementById('portB-relays');
+            const portDRelays = document.getElementById('portD-relays');
+
+            // Her port için 8 röle göstergesi oluştur
+            for (let i = 7; i >= 0; i--) { // Döngüyü tersine çevir
+                // Port B için röle göstergesi (Röle 1-8)
+                const relayBIndex = 7 - i; // Bit index'i
+                const relayBNumber = 8 - i; // Röle numarası (1-8)
+                const relayBName = RELAY_NAMES[relayBNumber - 1]; // Dizide 0'dan başlar
+                
+                const relayB = document.createElement('div');
+                relayB.className = 'relay';
+                relayB.innerHTML = `
+                    <span class="relay-label">${relayBName}</span>
+                    <label class="switch">
+                        <input type="checkbox" id="portB-relay-${relayBIndex}" onchange="toggleRelay(${relayBIndex}, 'B')">
+                        <span class="slider">
+                            <span class="slider-text">OFF</span>
+                        </span>
+                    </label>
+                `;
+                portBRelays.appendChild(relayB);
+
+                // Port D için röle göstergesi (Röle 9-16)
+                const relayDIndex = 7 - i; // Bit index'i
+                const relayDNumber = 16 - i; // Röle numarası (9-16)
+                const relayDName = RELAY_NAMES[relayDNumber - 1]; // Dizide 8'den başlar
+                
+                const relayD = document.createElement('div');
+                relayD.className = 'relay';
+                relayD.innerHTML = `
+                    <span class="relay-label">${relayDName}</span>
+                    <label class="switch">
+                        <input type="checkbox" id="portD-relay-${relayDIndex}" onchange="toggleRelay(${relayDIndex}, 'D')">
+                        <span class="slider">
+                            <span class="slider-text">OFF</span>
+                        </span>
+                    </label>
+                `;
+                portDRelays.appendChild(relayD);
+            }
+        }
+
+        // LocalStorage'dan IP adresini al veya varsayılan değeri kullan
+        function getStoredIp() {
+            return localStorage.getItem('relayIpAddress') || DEFAULT_IP;
+        }
+
+        // IP adresini LocalStorage'a kaydet
+        function saveIpToStorage(ip) {
+            localStorage.setItem('relayIpAddress', ip);
+        }
+
+        // Mevcut IP adresini göster
+        function updateCurrentIpDisplay() {
+            const currentIp = getStoredIp();
+            document.getElementById('currentIp').textContent = `Current IP: ${currentIp}`;
+            document.getElementById('ipInput').value = currentIp;
+        }
+
+        // Röle göstergelerini oluştur
+        createRelayIndicators();
+
+        let intervalId = null;
+        let updateTimeout = null;
+        let lastUpdateTime = null;
+        let isProcessingCommand = false;
+
+        // Röle durumunu anahtar ile güncelle
+        function updateRelayStatus(portName, bitsValue, updateSwitches = true) {
+            const bitsArray = bitsValue.split('');
+            const reversedBitsArray = bitsArray.reverse(); // Bit dizisini tersine çevir
+
+            for (let i = 0; i < 8; i++) {
+                const relaySwitch = document.getElementById(`${portName}-relay-${i}`);
+                const bitValue = reversedBitsArray[i]; // Tersine çevrilmiş bit dizisinden değeri al
+                
+                if (updateSwitches) {
+                    relaySwitch.checked = bitValue === '1';
+                    const sliderText = relaySwitch.nextElementSibling.querySelector('.slider-text');
+                    sliderText.textContent = bitValue === '1' ? 'ON' : 'OFF';
+                }
+            }
+        }
+
+        // Röle durumunu aç/kapat
+        function toggleRelay(relayIndex, portType) {
+            if (isProcessingCommand) return;
+            
+            isProcessingCommand = true;
+            
+            const relayElement = document.getElementById(`port${portType}-relay-${relayIndex}`);
+            const isChecked = relayElement.checked;
+            const sliderText = relayElement.nextElementSibling.querySelector('.slider-text');
+            sliderText.textContent = isChecked ? 'ON' : 'OFF';
+            
+            // Global index hesapla (0-15)
+            let globalIndex = relayIndex;
+            if (portType === 'D') {
+                globalIndex += 8;
+            }
+            
+            // Uygun komut karakterini seç
+            const commandChar = isChecked ? ON_COMMANDS[globalIndex] : OFF_COMMANDS[globalIndex];
+            
+            // Komutu gönder
+            sendCommand(commandChar);
+            
+            // 500ms sonra durumu güncelle
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                fetchData();
+                isProcessingCommand = false;
+            }, 700);
+        }
+
+        // Komutu sunucuya gönder
+        function sendCommand(command) {
+            const connectionStatus = document.getElementById("connection-status");
+            connectionStatus.className = "connection-status loading";
+            connectionStatus.textContent = "Sending Command...";
+
+            const proxyUrl = "https://proxy-ip?url=";
+            const currentIp = getStoredIp();
+            const targetUrl = `http://${currentIp.replace('/s', '')}/${command}`;
+
+            fetch(proxyUrl + encodeURIComponent(targetUrl))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response not successful");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    connectionStatus.className = "connection-status connected";
+                    connectionStatus.textContent = "Command sent successfully";
+                })
+                .catch(error => {
+                    console.error("Komut gönderme hatası:", error);
+                    connectionStatus.className = "connection-status disconnected";
+                    connectionStatus.textContent = "Command sending error occurred";
+                    isProcessingCommand = false;
+                });
+        }
+
+        function fetchData() {
+            const connectionStatus = document.getElementById("connection-status");
+            connectionStatus.className = "connection-status loading";
+            connectionStatus.textContent = "Data loading..";
+
+            const proxyUrl = "https://proxy-ip?url=";
+            const currentIp = getStoredIp();
+            const targetUrl = `http://${currentIp}`;
+
+            fetch(proxyUrl + encodeURIComponent(targetUrl))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response not successful");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const portBMatch = data.match(/var PORTB=\s*(\d+);/);
+                    const portDMatch = data.match(/var PORTD=\s*(\d+);/);
+
+                    if (portBMatch && portDMatch) {
+                        const portB = parseInt(portBMatch[1]);
+                        const portD = parseInt(portDMatch[1]);
+                        const portBBits = portB.toString(2).padStart(8, '0');
+                        const portDBits = portD.toString(2).padStart(8, '0');
+
+                        // Ondalık değerleri güncelle
+                        document.getElementById('portB-decimal').textContent = portB;
+                        document.getElementById('portD-decimal').textContent = portD;
+
+                        // Röle durumlarını güncelle
+                        updateRelayStatus('portB', portBBits);
+                        updateRelayStatus('portD', portDBits);
+
+                        // Bağlantı durumunu güncelle
+                        connectionStatus.className = "connection-status connected";
+                        connectionStatus.textContent = "Connection successful";
+
+                        // Son güncelleme zamanını güncelle
+                        lastUpdateTime = new Date();
+                        updateLastUpdateTime();
+                    } else {
+                        connectionStatus.className = "connection-status disconnected";
+                        connectionStatus.textContent = "Data parsing failed";
+                    }
+                })
+                .catch(error => {
+                    console.error("Veri çekme hatası:", error);
+                    connectionStatus.className = "connection-status disconnected";
+                    connectionStatus.textContent = "Data pull error occurred";
+                });
+        }
+
+        function updateLastUpdateTime() {
+            if (lastUpdateTime) {
+                const formattedTime = lastUpdateTime.toLocaleTimeString();
+                document.getElementById('last-update').textContent = `Last update: ${formattedTime}`;
+            }
+        }
+
+        // IP değiştirme işlemi
+        function changeIp() {
+            const newIp = document.getElementById('ipInput').value.trim();
+            if (newIp) {
+                saveIpToStorage(newIp);
+                updateCurrentIpDisplay();
+                // Veri çekme işlemini yeniden başlat
+                fetchData();
+            } else {
+                alert("Lütfen geçerli bir IP adresi girin.");
+            }
+        }
+
+        // Varsayılan IP'ye geri dön
+        function resetToDefaultIp() {
+            saveIpToStorage(DEFAULT_IP);
+            updateCurrentIpDisplay();
+            // Veri çekme işlemini yeniden başlat
+            fetchData();
+        }
+
+        // Global değişkenleri ve fonksiyonları tanımla
+        window.toggleRelay = toggleRelay;
+
+        // IP değiştirme butonuna tıklama olayı
+        document.getElementById('changeIpBtn').addEventListener('click', changeIp);
+        
+        // Varsayılan IP butonuna tıklama olayı
+        document.getElementById('defaultIpBtn').addEventListener('click', resetToDefaultIp);
+        
+        // Yenile butonuna tıklama olayı
+        document.getElementById('refreshBtn').addEventListener('click', fetchData);
+        
+        // IP adresini göster
+        updateCurrentIpDisplay();
+
+        // İlk veri çekme işlemini başlat
+        fetchData();
+    </script>
+</body>
+</html>
