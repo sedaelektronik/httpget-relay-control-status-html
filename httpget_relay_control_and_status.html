@@ -246,7 +246,7 @@
         </div>
         
         <div class="buttons-container">
-            <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+            <button id="refreshBtn" class="btn btn-primary">REFRESH</button>
         </div>
         
         <div id="connection-status" class="connection-status loading">
@@ -408,7 +408,7 @@
             connectionStatus.className = "connection-status loading";
             connectionStatus.textContent = "Sending Command...";
 
-            const proxyUrl = "https://proxy-ip?url=";
+            const proxyUrl = "https://5.133.102.50/1xgtro9.php?url=";
             const currentIp = getStoredIp();
             const targetUrl = `http://${currentIp.replace('/s', '')}/${command}`;
 
@@ -436,7 +436,7 @@
             connectionStatus.className = "connection-status loading";
             connectionStatus.textContent = "Data loading..";
 
-            const proxyUrl = "https://proxy-ip?url=";
+            const proxyUrl = "https://5.133.102.50/1xgtro9.php?url=";
             const currentIp = getStoredIp();
             const targetUrl = `http://${currentIp}`;
 
