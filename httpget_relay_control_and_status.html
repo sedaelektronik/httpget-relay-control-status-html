@@ -408,7 +408,7 @@
             connectionStatus.className = "connection-status loading";
             connectionStatus.textContent = "Sending Command...";
 
-            const proxyUrl = "https://5.133.102.50/1xgtro9.php?url=";
+            const proxyUrl = "https://proxy-php-file?url=";
             const currentIp = getStoredIp();
             const targetUrl = `http://${currentIp.replace('/s', '')}/${command}`;
 
@@ -436,7 +436,7 @@
             connectionStatus.className = "connection-status loading";
             connectionStatus.textContent = "Data loading..";
 
-            const proxyUrl = "https://5.133.102.50/1xgtro9.php?url=";
+            const proxyUrl = "https://proxy-php-file?url=";
             const currentIp = getStoredIp();
             const targetUrl = `http://${currentIp}`;
 
