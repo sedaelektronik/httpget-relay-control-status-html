@@ -24,3 +24,6 @@ const RELAY_NAMES = [
 
 * The device source page to be controlled can be selected with the ip variable in line 261:
 const DEFAULT_IP = "169.254.1.2:3000/s";
+
+* Lines 411 and 439 are the php file address for the proxy.
+const proxyUrl = "https://proxy-php-file?url=";
