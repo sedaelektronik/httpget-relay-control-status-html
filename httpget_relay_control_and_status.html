@@ -303,7 +303,7 @@
                     <label class="switch">
                         <input type="checkbox" id="portB-relay-${relayBIndex}" onchange="toggleRelay(${relayBIndex}, 'B')">
                         <span class="slider">
-                            <span class="slider-text">OFF</span>
+                            <span class="slider-text">----OFF</span>
                         </span>
                     </label>
                 `;
@@ -321,7 +321,7 @@
                     <label class="switch">
                         <input type="checkbox" id="portD-relay-${relayDIndex}" onchange="toggleRelay(${relayDIndex}, 'D')">
                         <span class="slider">
-                            <span class="slider-text">OFF</span>
+                            <span class="slider-text">----OFF</span>
                         </span>
                     </label>
                 `;
@@ -366,7 +366,7 @@
                 if (updateSwitches) {
                     relaySwitch.checked = bitValue === '1';
                     const sliderText = relaySwitch.nextElementSibling.querySelector('.slider-text');
-                    sliderText.textContent = bitValue === '1' ? 'ON' : 'OFF';
+                    sliderText.textContent = bitValue === '1' ? 'ON----' : '----OFF';
                 }
             }
         }
@@ -380,7 +380,7 @@
             const relayElement = document.getElementById(`port${portType}-relay-${relayIndex}`);
             const isChecked = relayElement.checked;
             const sliderText = relayElement.nextElementSibling.querySelector('.slider-text');
-            sliderText.textContent = isChecked ? 'ON' : 'OFF';
+            sliderText.textContent = isChecked ? 'ON----' : '----OFF';
             
             // Global index hesapla (0-15)
             let globalIndex = relayIndex;
